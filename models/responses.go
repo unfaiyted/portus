@@ -14,7 +14,7 @@ const (
 // ErrorResponse represents an error response
 type ErrorResponse struct {
 	Error   ErrorType              `json:"error" example:"FAILED_CHECK"`
-	Message string                 `json:"message" example:"This is a pretty message"`
+	Message string                 `json:"message,omitempty" example:"This is a pretty message"`
 	Details map[string]interface{} `json:"details,omitempty"`
 }
 

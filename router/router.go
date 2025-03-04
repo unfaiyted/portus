@@ -2,6 +2,7 @@
 package router
 
 import (
+	"portus/repository"
 	"portus/services"
 
 	"github.com/gin-contrib/cors"
@@ -22,11 +23,16 @@ func Setup(db *gorm.DB, configService services.ConfigService) *gin.Engine {
 	// Setup API v1 routes
 	v1 := r.Group("/api/v1")
 
+	// TODO: should I fix this? It doesent technically need a repo, but ti does interact with the database?
 	healthService := services.NewHealthService(db)
+
+	shortenRepo := repository.NewShortenRepository(db)
+	shortenService := services.NewShortenService(shortenRepo, "")
 
 	// Register all routes
 	RegisterConfigRoutes(v1, configService)
 	RegisterHealthRoutes(v1, healthService)
+	RegisterShortenRoutes(v1, shortenService)
 
 	return r
 }
