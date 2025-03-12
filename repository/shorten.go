@@ -45,7 +45,7 @@ func (r *shortenRepository) FindById(ctx context.Context, id uint64) (*models.Sh
 
 func (r *shortenRepository) FindByCode(ctx context.Context, code string) (*models.Shorten, error) {
 	var shorten models.Shorten
-	result := r.db.First(&shorten, code)
+	result := r.db.Where("short_code", code).First(&shorten)
 	return &shorten, result.Error
 }
 

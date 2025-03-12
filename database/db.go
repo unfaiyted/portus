@@ -6,6 +6,7 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"portus/models"
 )
 
 // Config holds database configuration
@@ -53,9 +54,10 @@ func Initialize(dbConfig Config) (*gorm.DB, error) {
 	}
 
 	// Auto Migrate the schema
-	// if err := db.AutoMigrate(&models.User{}, &models.Paste{}); err != nil {
-	// return nil, fmt.Errorf("failed to migrate database schema: %w", err)
-	// }
+	//&models.User{},
+	if err := db.AutoMigrate(&models.Shorten{}); err != nil {
+		return nil, fmt.Errorf("failed to migrate database schema: %w", err)
+	}
 
 	return db, nil
 }

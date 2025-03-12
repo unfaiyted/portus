@@ -46,9 +46,210 @@
                     }
                 }
             }
+        },
+        "/shorten": {
+            "post": {
+                "description": "Creates a new shortened URL from a long URL, with optional custom code and expiration. If no custom code is provided, one will be generated.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "shorten"
+                ],
+                "summary": "Create a shortened URL",
+                "parameters": [
+                    {
+                        "description": "URL to shorten",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ShortenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Successfully created shortened URL",
+                        "schema": {
+                            "$ref": "#/definitions/models.APIResponse-models_ShortenData"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request format or short code already exists",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/shorten/{code}": {
+            "put": {
+                "description": "Updates an existing shortened URL by its short code",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "shorten"
+                ],
+                "summary": "Update a shortened URL",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Short code identifier",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated URL data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ShortenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully updated shortened URL",
+                        "schema": {
+                            "$ref": "#/definitions/models.APIResponse-models_ShortenData"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request format",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Short URL not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes an existing shortened URL by its short code",
+                "tags": [
+                    "shorten"
+                ],
+                "summary": "Delete a shortened URL",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Short code identifier",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content - URL successfully deleted"
+                    },
+                    "400": {
+                        "description": "Bad request - missing code parameter",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Short URL not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/{code}": {
+            "get": {
+                "description": "Redirects to the original URL from a short code",
+                "tags": [
+                    "shorten"
+                ],
+                "summary": "Redirect to original URL",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Short code identifier",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Found - Redirects to the original URL",
+                        "headers": {
+                            "Location": {
+                                "type": "string",
+                                "description": "The URL to redirect to"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - missing code parameter",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Short URL not found or has expired",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "models.APIResponse-models_ShortenData": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.ShortenData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operation successful"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
         "models.ErrorResponse": {
             "type": "object",
             "properties": {
@@ -67,6 +268,12 @@
                 "message": {
                     "type": "string",
                     "example": "This is a pretty message"
+                },
+                "request_id": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
                 }
             }
         },
@@ -77,14 +284,28 @@
                 "UNAUTHORIZED",
                 "NOT_FOUND",
                 "BAD_REQUEST",
-                "INTERNAL_ERROR"
+                "INTERNAL_ERROR",
+                "FORBIDDEN",
+                "CONFLICT",
+                "VALIDATION_ERROR",
+                "RATE_LIMITED",
+                "TIMEOUT",
+                "SERVICE_UNAVAILABLE",
+                "UNPROCESSABLE_ENTITY"
             ],
             "x-enum-varnames": [
                 "ErrorTypeFailedCheck",
                 "ErrorTypeUnauthorized",
                 "ErrorTypeNotFound",
                 "ErrorTypeBadRequest",
-                "ErrorTypeInternalError"
+                "ErrorTypeInternalError",
+                "ErrorTypeForbidden",
+                "ErrorTypeConflict",
+                "ErrorTypeValidation",
+                "ErrorTypeRateLimited",
+                "ErrorTypeTimeout",
+                "ErrorTypeServiceUnavailable",
+                "ErrorTypeUnprocessableEntity"
             ]
         },
         "models.HealthResponse": {
@@ -112,6 +333,65 @@
                         "degraded"
                     ],
                     "example": "up"
+                }
+            }
+        },
+        "models.Shorten": {
+            "type": "object",
+            "required": [
+                "originalUrl"
+            ],
+            "properties": {
+                "clickCount": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "expiresAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "originalUrl": {
+                    "type": "string",
+                    "example": "https://example.com/some/long/path"
+                },
+                "shortCode": {
+                    "type": "string",
+                    "example": "abc123"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ShortenData": {
+            "type": "object",
+            "properties": {
+                "shorten": {
+                    "$ref": "#/definitions/models.Shorten"
+                }
+            }
+        },
+        "models.ShortenRequest": {
+            "type": "object",
+            "required": [
+                "originalUrl"
+            ],
+            "properties": {
+                "customCode": {
+                    "type": "string"
+                },
+                "expiresAfter": {
+                    "description": "In days",
+                    "type": "integer"
+                },
+                "originalUrl": {
+                    "type": "string"
                 }
             }
         }

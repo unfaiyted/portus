@@ -1,5 +1,16 @@
 basePath: /api/v1
 definitions:
+  models.APIResponse-models_ShortenData:
+    properties:
+      data:
+        $ref: '#/definitions/models.ShortenData'
+      message:
+        example: Operation successful
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
   models.ErrorResponse:
     properties:
       details:
@@ -12,6 +23,10 @@ definitions:
       message:
         example: This is a pretty message
         type: string
+      request_id:
+        type: string
+      timestamp:
+        type: string
     type: object
   models.ErrorType:
     enum:
@@ -20,6 +35,13 @@ definitions:
     - NOT_FOUND
     - BAD_REQUEST
     - INTERNAL_ERROR
+    - FORBIDDEN
+    - CONFLICT
+    - VALIDATION_ERROR
+    - RATE_LIMITED
+    - TIMEOUT
+    - SERVICE_UNAVAILABLE
+    - UNPROCESSABLE_ENTITY
     type: string
     x-enum-varnames:
     - ErrorTypeFailedCheck
@@ -27,6 +49,13 @@ definitions:
     - ErrorTypeNotFound
     - ErrorTypeBadRequest
     - ErrorTypeInternalError
+    - ErrorTypeForbidden
+    - ErrorTypeConflict
+    - ErrorTypeValidation
+    - ErrorTypeRateLimited
+    - ErrorTypeTimeout
+    - ErrorTypeServiceUnavailable
+    - ErrorTypeUnprocessableEntity
   models.HealthResponse:
     properties:
       application:
@@ -48,6 +77,46 @@ definitions:
     - database
     - status
     type: object
+  models.Shorten:
+    properties:
+      clickCount:
+        example: 0
+        type: integer
+      createdAt:
+        type: string
+      expiresAt:
+        type: string
+      id:
+        example: 1
+        type: integer
+      originalUrl:
+        example: https://example.com/some/long/path
+        type: string
+      shortCode:
+        example: abc123
+        type: string
+      updatedAt:
+        type: string
+    required:
+    - originalUrl
+    type: object
+  models.ShortenData:
+    properties:
+      shorten:
+        $ref: '#/definitions/models.Shorten'
+    type: object
+  models.ShortenRequest:
+    properties:
+      customCode:
+        type: string
+      expiresAfter:
+        description: In days
+        type: integer
+      originalUrl:
+        type: string
+    required:
+    - originalUrl
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -62,6 +131,33 @@ info:
   title: Portus API
   version: "1.0"
 paths:
+  /{code}:
+    get:
+      description: Redirects to the original URL from a short code
+      parameters:
+      - description: Short code identifier
+        in: path
+        name: code
+        required: true
+        type: string
+      responses:
+        "302":
+          description: Found - Redirects to the original URL
+          headers:
+            Location:
+              description: The URL to redirect to
+              type: string
+        "400":
+          description: Bad request - missing code parameter
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Short URL not found or has expired
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Redirect to original URL
+      tags:
+      - shorten
   /health:
     get:
       description: returns JSON object with health statuses.
@@ -79,6 +175,102 @@ paths:
       summary: checks app and database health
       tags:
       - health
+  /shorten:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new shortened URL from a long URL, with optional custom
+        code and expiration. If no custom code is provided, one will be generated.
+      parameters:
+      - description: URL to shorten
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ShortenRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successfully created shortened URL
+          schema:
+            $ref: '#/definitions/models.APIResponse-models_ShortenData'
+        "400":
+          description: Invalid request format or short code already exists
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Create a shortened URL
+      tags:
+      - shorten
+  /shorten/{code}:
+    delete:
+      description: Deletes an existing shortened URL by its short code
+      parameters:
+      - description: Short code identifier
+        in: path
+        name: code
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content - URL successfully deleted
+        "400":
+          description: Bad request - missing code parameter
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Short URL not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Delete a shortened URL
+      tags:
+      - shorten
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing shortened URL by its short code
+      parameters:
+      - description: Short code identifier
+        in: path
+        name: code
+        required: true
+        type: string
+      - description: Updated URL data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ShortenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully updated shortened URL
+          schema:
+            $ref: '#/definitions/models.APIResponse-models_ShortenData'
+        "400":
+          description: Invalid request format
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Short URL not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Update a shortened URL
+      tags:
+      - shorten
 schemes:
 - http
 swagger: "2.0"

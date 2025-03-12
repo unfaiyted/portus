@@ -17,7 +17,7 @@
   "db": {
     "host": "localhost",
     "maxConns": 20,
-    "name": "yourdb",
+    "name": "shortendb",
     "password": "yourpassword",
     "port": "5432",
     "timeout": 30,

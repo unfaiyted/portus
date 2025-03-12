@@ -2,14 +2,14 @@ package services
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"portus/models"
 	"portus/repository"
 	"portus/utils"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 // ShortenService provides methods to interact with URL shortening
@@ -19,6 +19,7 @@ type ShortenService interface {
 	Update(ctx context.Context, code string, req models.ShortenRequest) (*models.ShortenResponse, error)
 	Delete(ctx context.Context, code string) error
 	GetById(ctx context.Context, id uint64) *models.Shorten
+	ShortCodeExists(ctx context.Context, randomCode string) (bool, error)
 }
 
 type shortenService struct {
@@ -67,6 +68,8 @@ func (s *shortenService) Create(ctx context.Context, req models.ShortenRequest) 
 	var shortCode string
 	var err error
 
+	log.Debug().Str("custom_code", req.CustomCode).Msg("Code passed")
+
 	if req.CustomCode != "" {
 		shortCode = req.CustomCode
 		// Check if code already exists
@@ -76,10 +79,7 @@ func (s *shortenService) Create(ctx context.Context, req models.ShortenRequest) 
 		}
 	} else {
 		// Generate random code
-		shortCode, err = generateShortCode(6)
-		if err != nil {
-			return nil, err
-		}
+		shortCode = utils.GenerateShortCode()
 	}
 
 	// Set expiration time if specified
@@ -154,18 +154,21 @@ func (s *shortenService) Delete(ctx context.Context, code string) error {
 
 	id, err := s.repo.Delete(ctx, code)
 	if err != nil {
-		log.Error().Err(err).Str("id", id)
+		log.Error().Err(err).Str("id", id).Msg("Error deleting")
 		return err
 	}
 	return nil
 }
 
-// Helper function to generate a random short code
-func generateShortCode(length int) (string, error) {
-	bytes := make([]byte, length)
-	if _, err := rand.Read(bytes); err != nil {
-		return "", err
+func (s *shortenService) ShortCodeExists(ctx context.Context, code string) (bool, error) {
+	log := utils.LoggerFromContext(ctx)
+	log.Debug().Str("code", code).Msg("Checking if short code exists")
+
+	_, err := s.repo.FindByCode(ctx, code)
+	if err != nil {
+		log.Error().Err(err).Str("code", code).Msg("Error finding short code")
+		return false, nil
 	}
 
-	return base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(bytes)[:length], nil
+	return true, nil
 }
