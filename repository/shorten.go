@@ -61,7 +61,7 @@ func (r *shortenRepository) Update(ctx context.Context, shorten *models.Shorten)
 
 func (r *shortenRepository) IncrementClickCount(ctx context.Context, code string) (*models.Shorten, error) {
 	var shorten models.Shorten
-	r.db.First(&shorten, code)
+	r.db.Where("short_code", code).First(&shorten)
 
 	shorten.ClickCount = shorten.ClickCount + 1
 

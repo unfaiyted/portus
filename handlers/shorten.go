@@ -269,7 +269,7 @@ func (h *ShortenHandler) Delete(c *gin.Context) {
 //	  "requestId": "c7f3305d-8c9a-4b9b-b701-3b9a1e36c1f0"
 //	}
 //
-// @Router /{code} [get]
+// @Router /shorten/{code} [get]
 func (h *ShortenHandler) Redirect(c *gin.Context) {
 	ctx := c.Request.Context()
 	log := utils.LoggerFromContext(ctx)
