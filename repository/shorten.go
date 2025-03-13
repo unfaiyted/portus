@@ -13,10 +13,10 @@ type ShortenRepository interface {
 	FindById(ctx context.Context, id uint64) (*models.Shorten, error)
 	FindByCode(ctx context.Context, code string) (*models.Shorten, error)
 	Create(ctx context.Context, shorten *models.Shorten) (*models.Shorten, error)
-
 	Update(ctx context.Context, shorten *models.Shorten) (*models.Shorten, error)
 	Delete(ctx context.Context, code string) (string, error)
 	IncrementClickCount(ctx context.Context, code string) (*models.Shorten, error)
+	FindByOriginalURL(ctx context.Context, url string) (*models.Shorten, error)
 }
 
 type shortenRepository struct {
@@ -73,4 +73,16 @@ func (r *shortenRepository) Delete(ctx context.Context, code string) (string, er
 	var shorten models.Shorten
 	result := r.db.Delete(&shorten, code)
 	return code, result.Error
+}
+
+func (r *shortenRepository) FindByOriginalURL(ctx context.Context, url string) (*models.Shorten, error) {
+	var shorten models.Shorten
+	result := r.db.Where("original_url = ?", url).First(&shorten)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, result.Error
+	}
+	return &shorten, nil
 }

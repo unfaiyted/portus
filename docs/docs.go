@@ -96,7 +96,104 @@ const docTemplate = `{
                 }
             }
         },
+        "/shorten/lookup": {
+            "post": {
+                "description": "Checks if an original URL already has a short code and optionally creates one if it doesn't exist",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "shorten"
+                ],
+                "summary": "Check if a URL is already shortened",
+                "parameters": [
+                    {
+                        "description": "Original URL to check",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.GetByOriginalURLRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved shortened URL information",
+                        "schema": {
+                            "$ref": "#/definitions/models.APIResponse-models_ShortenData"
+                        }
+                    },
+                    "201": {
+                        "description": "Successfully created new shortened URL",
+                        "schema": {
+                            "$ref": "#/definitions/models.APIResponse-models_ShortenData"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request format",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Original URL not found and createIfNotExists is false",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/shorten/{code}": {
+            "get": {
+                "description": "Redirects to the original URL from a short code",
+                "tags": [
+                    "shorten"
+                ],
+                "summary": "Redirect to original URL",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Short code identifier",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Found - Redirects to the original URL",
+                        "headers": {
+                            "Location": {
+                                "type": "string",
+                                "description": "The URL to redirect to"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - missing code parameter",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Short URL not found or has expired",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "put": {
                 "description": "Updates an existing shortened URL by its short code",
                 "consumes": [
@@ -193,47 +290,6 @@ const docTemplate = `{
                     }
                 }
             }
-        },
-        "/{code}": {
-            "get": {
-                "description": "Redirects to the original URL from a short code",
-                "tags": [
-                    "shorten"
-                ],
-                "summary": "Redirect to original URL",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Short code identifier",
-                        "name": "code",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "302": {
-                        "description": "Found - Redirects to the original URL",
-                        "headers": {
-                            "Location": {
-                                "type": "string",
-                                "description": "The URL to redirect to"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request - missing code parameter",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Short URL not found or has expired",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
@@ -310,6 +366,26 @@ const docTemplate = `{
                 "ErrorTypeServiceUnavailable",
                 "ErrorTypeUnprocessableEntity"
             ]
+        },
+        "models.GetByOriginalURLRequest": {
+            "type": "object",
+            "required": [
+                "originalUrl"
+            ],
+            "properties": {
+                "createIfNotExists": {
+                    "type": "boolean"
+                },
+                "customCode": {
+                    "type": "string"
+                },
+                "expiresAfter": {
+                    "type": "integer"
+                },
+                "originalUrl": {
+                    "type": "string"
+                }
+            }
         },
         "models.HealthResponse": {
             "type": "object",

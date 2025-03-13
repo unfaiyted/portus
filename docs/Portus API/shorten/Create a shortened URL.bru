@@ -6,6 +6,13 @@ meta {
 
 post {
   url: {{baseUrl}}/shorten
-  body: none
+  body: json
   auth: none
+}
+
+body:json {
+  {
+      "originalUrl": "https://example.com/updated/path",
+      "expiresAfter": 14
+    }
 }

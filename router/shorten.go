@@ -13,6 +13,7 @@ func RegisterShortenRoutes(rg *gin.RouterGroup, service services.ShortenService)
 	{
 
 		shorts.POST("", shortenHandlers.Create)
+		shorts.POST("lookup", shortenHandlers.GetByOriginalURL)
 		shorts.PUT("/:code", shortenHandlers.Update)
 		shorts.DELETE("/:code", shortenHandlers.Delete)
 		shorts.GET("/:code", shortenHandlers.Redirect)

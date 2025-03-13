@@ -94,17 +94,8 @@ func (h *ShortenHandler) Create(c *gin.Context) {
 		return
 	}
 
-	log.Info().Str("shortCode", result.ShortCode).Str("shortUrl", result.ShortURL).Msg("Successfully created shortened URL")
+	log.Info().Str("shortCode", result.Shorten.ShortCode).Str("shortUrl", result.ShortURL).Msg("Successfully created shortened URL")
 
-	// shortenData := models.ShortenData{
-	// 	Shorten: &models.Shorten{
-	// 		OriginalURL: result.OriginalURL,
-	// 		ShortCode:   result.ShortCode,
-	// 		ExpiresAt:   result.ExpiresAt,
-	// 		CreatedAt: result.CreatedAt,
-	//
-	// 	},
-	// }
 	utils.RespondCreated(c, result, "URL shortened successfully")
 }
 
@@ -189,14 +180,7 @@ func (h *ShortenHandler) Update(c *gin.Context) {
 
 	log.Info().Str("code", code).Str("shortUrl", result.ShortURL).Msg("Successfully updated shortened URL")
 
-	shortenData := models.ShortenData{
-		Shorten: &models.Shorten{
-			OriginalURL: result.OriginalURL,
-			ShortCode:   result.ShortCode,
-			ExpiresAt:   result.ExpiresAt,
-		},
-	}
-	utils.RespondOK(c, shortenData, "URL updated successfully")
+	utils.RespondOK(c, result, "URL updated successfully")
 }
 
 // Delete godoc
@@ -294,3 +278,110 @@ func (h *ShortenHandler) Redirect(c *gin.Context) {
 	c.Redirect(http.StatusFound, url)
 }
 
+// GetByOriginalURL godoc
+// @Summary Check if a URL is already shortened
+// @Description Checks if an original URL already has a short code and optionally creates one if it doesn't exist
+// @Tags shorten
+// @Accept json
+// @Produce json
+// @Param request body models.GetByOriginalURLRequest true "Original URL to check"
+// @Example request
+//
+//	{
+//	  "originalUrl": "https://example.com/some/very/long/path",
+//	  "createIfNotExists": true,
+//	  "expiresAfter": 7
+//	}
+//
+// @Success 200 {object} models.APIResponse[models.ShortenData] "Successfully retrieved shortened URL information"
+// @Example response
+//
+//	{
+//	  "success": true,
+//	  "data": {
+//	    "shorten": {
+//	      "originalUrl": "https://example.com/some/very/long/path",
+//	      "shortCode": "abc123",
+//	      "expiresAt": "2023-06-15T10:30:45Z"
+//	    }
+//	  },
+//	  "message": "URL information retrieved successfully"
+//	}
+//
+// @Success 201 {object} models.APIResponse[models.ShortenData] "Successfully created new shortened URL"
+// @Failure 400 {object} models.ErrorResponse "Invalid request format"
+// @Failure 404 {object} models.ErrorResponse "Original URL not found and createIfNotExists is false"
+// @Example response
+//
+//	{
+//	  "error": "not_found",
+//	  "message": "No shortened URL exists for the provided original URL",
+//	  "details": {},
+//	  "timestamp": "2023-06-08T10:30:45Z",
+//	  "requestId": "c7f3305d-8c9a-4b9b-b701-3b9a1e36c1f0"
+//	}
+//
+// @Failure 500 {object} models.ErrorResponse "Server error"
+// @Router /shorten/lookup [post]
+func (h *ShortenHandler) GetByOriginalURL(c *gin.Context) {
+	ctx := c.Request.Context()
+	log := utils.LoggerFromContext(ctx)
+
+	var req models.GetByOriginalURLRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Error().Err(err).Msg("Invalid request format for URL lookup")
+		utils.RespondValidationError(c, err)
+		return
+	}
+
+	log.Info().
+		Str("originalUrl", req.OriginalURL).
+		Bool("createIfNotExists", req.CreateIfNotExists).
+		Msg("Looking up original URL")
+
+	result, found, err := h.service.GetByOriginalUrl(ctx, req.OriginalURL)
+
+	if err != nil {
+		log.Error().Err(err).Str("originalUrl", req.OriginalURL).Msg("Failed to lookup URL")
+		utils.RespondInternalError(c, err, "Failed to lookup URL")
+		return
+	}
+
+	if !found {
+		if req.CreateIfNotExists {
+			// Create new shortened URL if requested
+			shortenReq := models.ShortenRequest{
+				OriginalURL:  req.OriginalURL,
+				ExpiresAfter: req.ExpiresAfter,
+				CustomCode:   req.CustomCode,
+			}
+
+			result, err = h.service.Create(ctx, shortenReq)
+			if err != nil {
+				log.Error().Err(err).Str("originalUrl", req.OriginalURL).Msg("Failed to create shortened URL")
+				utils.RespondInternalError(c, err, "Failed to create shortened URL")
+				return
+			}
+
+			log.Info().
+				Str("originalUrl", req.OriginalURL).
+				Str("shortCode", result.Shorten.ShortCode).
+				Msg("Created new shortened URL during lookup")
+
+			utils.RespondCreated(c, result, "New shortened URL created")
+			return
+		}
+
+		// URL not found and no creation requested
+		log.Info().Str("originalUrl", req.OriginalURL).Msg("No shortened URL found for original URL")
+		utils.RespondNotFound(c, nil, "No shortened URL exists for the provided original URL")
+		return
+	}
+
+	log.Info().
+		Str("originalUrl", req.OriginalURL).
+		Str("shortCode", result.Shorten.ShortCode).
+		Msg("Successfully found shortened URL for original URL")
+
+	utils.RespondOK(c, result, "URL details retrieved successfully")
+}

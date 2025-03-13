@@ -15,10 +15,11 @@ import (
 // ShortenService provides methods to interact with URL shortening
 type ShortenService interface {
 	GetOriginalURL(ctx context.Context, code string) (string, error)
-	Create(ctx context.Context, req models.ShortenRequest) (*models.ShortenResponse, error)
-	Update(ctx context.Context, code string, req models.ShortenRequest) (*models.ShortenResponse, error)
+	Create(ctx context.Context, req models.ShortenRequest) (*models.ShortenData, error)
+	Update(ctx context.Context, code string, req models.ShortenRequest) (*models.ShortenData, error)
 	Delete(ctx context.Context, code string) error
-	GetById(ctx context.Context, id uint64) *models.Shorten
+	GetById(ctx context.Context, id uint64) *models.ShortenData
+	GetByOriginalUrl(ctx context.Context, url string) (*models.ShortenData, bool, error)
 	ShortCodeExists(ctx context.Context, randomCode string) (bool, error)
 }
 
@@ -35,12 +36,16 @@ func NewShortenService(repo repository.ShortenRepository, baseURL string) Shorte
 	}
 }
 
-func (s *shortenService) GetById(ctx context.Context, id uint64) *models.Shorten {
+func (s *shortenService) GetById(ctx context.Context, id uint64) *models.ShortenData {
 	shorten, err := s.repo.FindById(ctx, id)
 	if err != nil {
 		return nil
 	}
-	return shorten
+
+	return &models.ShortenData{
+		Shorten:  shorten,
+		ShortURL: fmt.Sprintf("%s/%s", s.baseURL, shorten.ShortCode),
+	}
 }
 
 func (s *shortenService) GetOriginalURL(ctx context.Context, code string) (string, error) {
@@ -64,7 +69,7 @@ func (s *shortenService) GetOriginalURL(ctx context.Context, code string) (strin
 	return shorten.OriginalURL, nil
 }
 
-func (s *shortenService) Create(ctx context.Context, req models.ShortenRequest) (*models.ShortenResponse, error) {
+func (s *shortenService) Create(ctx context.Context, req models.ShortenRequest) (*models.ShortenData, error) {
 	var shortCode string
 	var err error
 
@@ -102,15 +107,13 @@ func (s *shortenService) Create(ctx context.Context, req models.ShortenRequest) 
 		return nil, err
 	}
 
-	return &models.ShortenResponse{
-		ShortCode:   newShorten.ShortCode,
-		OriginalURL: newShorten.OriginalURL,
-		ShortURL:    fmt.Sprintf("%s/%s", s.baseURL, shortCode),
-		ExpiresAt:   expiresAt,
+	return &models.ShortenData{
+		Shorten:  newShorten,
+		ShortURL: fmt.Sprintf("%s/%s", s.baseURL, shortCode),
 	}, nil
 }
 
-func (s *shortenService) Update(ctx context.Context, code string, req models.ShortenRequest) (*models.ShortenResponse, error) {
+func (s *shortenService) Update(ctx context.Context, code string, req models.ShortenRequest) (*models.ShortenData, error) {
 	shorten, err := s.repo.FindByCode(ctx, code)
 	if err != nil {
 		return nil, err
@@ -133,11 +136,9 @@ func (s *shortenService) Update(ctx context.Context, code string, req models.Sho
 		return nil, err
 	}
 
-	return &models.ShortenResponse{
-		ShortCode:   updatedShorten.ShortCode,
-		OriginalURL: req.OriginalURL,
-		ShortURL:    fmt.Sprintf("%s/%s", s.baseURL, code),
-		ExpiresAt:   shorten.ExpiresAt,
+	return &models.ShortenData{
+		Shorten:  updatedShorten,
+		ShortURL: fmt.Sprintf("%s/%s", s.baseURL, code),
 	}, nil
 }
 
@@ -171,4 +172,20 @@ func (s *shortenService) ShortCodeExists(ctx context.Context, code string) (bool
 	}
 
 	return true, nil
+}
+
+func (s *shortenService) GetByOriginalUrl(ctx context.Context, url string) (*models.ShortenData, bool, error) {
+	shorten, err := s.repo.FindByOriginalURL(ctx, url)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if shorten == nil {
+		return nil, false, nil
+	}
+
+	return &models.ShortenData{
+		Shorten:  shorten,
+		ShortURL: fmt.Sprintf("%s/%s", s.baseURL, shorten.ShortCode),
+	}, true, nil
 }

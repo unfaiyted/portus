@@ -34,7 +34,7 @@ func (h *ConfigHandler) UpdateConfig(c *gin.Context) {
 		return
 	}
 
-	if err := h.configService.SaveConfig(cfg); err != nil {
+	if err := h.configService.SaveConfig(c.Request.Context(), cfg); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

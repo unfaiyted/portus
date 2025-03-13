@@ -27,7 +27,7 @@ func Setup(db *gorm.DB, configService services.ConfigService) *gin.Engine {
 	healthService := services.NewHealthService(db)
 
 	shortenRepo := repository.NewShortenRepository(db)
-	shortenService := services.NewShortenService(shortenRepo, "")
+	shortenService := services.NewShortenService(shortenRepo, configService.GetConfig().App.AppURL)
 
 	// Register all routes
 	RegisterConfigRoutes(v1, configService)

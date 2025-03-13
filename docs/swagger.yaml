@@ -56,6 +56,19 @@ definitions:
     - ErrorTypeTimeout
     - ErrorTypeServiceUnavailable
     - ErrorTypeUnprocessableEntity
+  models.GetByOriginalURLRequest:
+    properties:
+      createIfNotExists:
+        type: boolean
+      customCode:
+        type: string
+      expiresAfter:
+        type: integer
+      originalUrl:
+        type: string
+    required:
+    - originalUrl
+    type: object
   models.HealthResponse:
     properties:
       application:
@@ -131,33 +144,6 @@ info:
   title: Portus API
   version: "1.0"
 paths:
-  /{code}:
-    get:
-      description: Redirects to the original URL from a short code
-      parameters:
-      - description: Short code identifier
-        in: path
-        name: code
-        required: true
-        type: string
-      responses:
-        "302":
-          description: Found - Redirects to the original URL
-          headers:
-            Location:
-              description: The URL to redirect to
-              type: string
-        "400":
-          description: Bad request - missing code parameter
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-        "404":
-          description: Short URL not found or has expired
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-      summary: Redirect to original URL
-      tags:
-      - shorten
   /health:
     get:
       description: returns JSON object with health statuses.
@@ -233,6 +219,32 @@ paths:
       summary: Delete a shortened URL
       tags:
       - shorten
+    get:
+      description: Redirects to the original URL from a short code
+      parameters:
+      - description: Short code identifier
+        in: path
+        name: code
+        required: true
+        type: string
+      responses:
+        "302":
+          description: Found - Redirects to the original URL
+          headers:
+            Location:
+              description: The URL to redirect to
+              type: string
+        "400":
+          description: Bad request - missing code parameter
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Short URL not found or has expired
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Redirect to original URL
+      tags:
+      - shorten
     put:
       consumes:
       - application/json
@@ -269,6 +281,45 @@ paths:
           schema:
             $ref: '#/definitions/models.ErrorResponse'
       summary: Update a shortened URL
+      tags:
+      - shorten
+  /shorten/lookup:
+    post:
+      consumes:
+      - application/json
+      description: Checks if an original URL already has a short code and optionally
+        creates one if it doesn't exist
+      parameters:
+      - description: Original URL to check
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.GetByOriginalURLRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved shortened URL information
+          schema:
+            $ref: '#/definitions/models.APIResponse-models_ShortenData'
+        "201":
+          description: Successfully created new shortened URL
+          schema:
+            $ref: '#/definitions/models.APIResponse-models_ShortenData'
+        "400":
+          description: Invalid request format
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Original URL not found and createIfNotExists is false
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Check if a URL is already shortened
       tags:
       - shorten
 schemes:

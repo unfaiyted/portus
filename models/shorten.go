@@ -19,14 +19,14 @@ type ShortenRequest struct {
 	ExpiresAfter int    `json:"expiresAfter,omitempty"` // In days
 }
 
-// ShortenResponse represents the response for a shortened URL
-type ShortenResponse struct {
-	ShortCode   string    `json:"shortCode"`
-	OriginalURL string    `json:"originalUrl"`
-	ShortURL    string    `json:"shortUrl"`
-	ExpiresAt   time.Time `json:"expiresAt,omitempty"`
+type ShortenData struct {
+	Shorten  *Shorten `json:"shorten"`
+	ShortURL string   `json:"shortUrl"`
 }
 
-type ShortenData struct {
-	Shorten *Shorten `json:"shorten"`
+type GetByOriginalURLRequest struct {
+	OriginalURL       string `json:"originalUrl" binding:"required"`
+	CreateIfNotExists bool   `json:"createIfNotExists"`
+	ExpiresAfter      int    `json:"expiresAfter,omitempty"`
+	CustomCode        string `json:"customCode,omitempty"`
 }
