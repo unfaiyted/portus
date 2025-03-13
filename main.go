@@ -61,7 +61,7 @@ func main() {
 		log.Fatal().Err(err).Msg("Failed to connect to database:")
 	}
 
-	r := router.Setup(db, configService)
+	r := router.Setup(ctx, db, configService)
 
 	r.Use(middleware.LoggerMiddleware())
 
