@@ -73,7 +73,7 @@ func (s *shortenService) Create(ctx context.Context, req models.ShortenRequest) 
 	var shortCode string
 	var err error
 
-	log.Debug().Str("custom_code", req.CustomCode).Msg("Code passed")
+	log.Debug().Str("customCode", req.CustomCode).Msg("Code passed")
 
 	if req.CustomCode != "" {
 		shortCode = req.CustomCode

@@ -29,4 +29,5 @@ type GetByOriginalURLRequest struct {
 	CreateIfNotExists bool   `json:"createIfNotExists"`
 	ExpiresAfter      int    `json:"expiresAfter,omitempty"`
 	CustomCode        string `json:"customCode,omitempty"`
+	// TODO: allow duplicates? like create more copies if someone wants multiple short urls to the same domain. ??
 }

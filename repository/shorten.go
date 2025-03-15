@@ -40,12 +40,26 @@ func (r *shortenRepository) GetAll(ctx context.Context) ([]models.Shorten, error
 func (r *shortenRepository) FindById(ctx context.Context, id uint64) (*models.Shorten, error) {
 	var shorten models.Shorten
 	result := r.db.First(&shorten, id)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, result.Error
+	}
 	return &shorten, result.Error
 }
 
 func (r *shortenRepository) FindByCode(ctx context.Context, code string) (*models.Shorten, error) {
 	var shorten models.Shorten
 	result := r.db.Where("short_code", code).First(&shorten)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, result.Error
+	}
 	return &shorten, result.Error
 }
 

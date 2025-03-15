@@ -290,6 +290,7 @@ func (h *ShortenHandler) Redirect(c *gin.Context) {
 //	{
 //	  "originalUrl": "https://example.com/some/very/long/path",
 //	  "createIfNotExists": true,
+//	  "customCode": "mycode",
 //	  "expiresAfter": 7
 //	}
 //
