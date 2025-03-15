@@ -44,7 +44,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
+                            "$ref": "#/definitions/models.ErrorResponse-error"
                         }
                     }
                 }
@@ -84,13 +84,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request format or short code already exists",
                         "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
+                            "$ref": "#/definitions/models.ErrorResponse-error"
                         }
                     },
                     "500": {
                         "description": "Server error",
                         "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
+                            "$ref": "#/definitions/models.ErrorResponse-error"
                         }
                     }
                 }
@@ -136,19 +136,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request format",
                         "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
+                            "$ref": "#/definitions/models.ErrorResponse-error"
                         }
                     },
                     "404": {
                         "description": "Original URL not found and createIfNotExists is false",
                         "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
+                            "$ref": "#/definitions/models.ErrorResponse-error"
                         }
                     },
                     "500": {
                         "description": "Server error",
                         "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
+                            "$ref": "#/definitions/models.ErrorResponse-error"
                         }
                     }
                 }
@@ -183,13 +183,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request - missing code parameter",
                         "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
+                            "$ref": "#/definitions/models.ErrorResponse-error"
                         }
                     },
                     "404": {
                         "description": "Short URL not found or has expired",
                         "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
+                            "$ref": "#/definitions/models.ErrorResponse-error"
                         }
                     }
                 }
@@ -234,19 +234,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request format",
                         "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
+                            "$ref": "#/definitions/models.ErrorResponse-error"
                         }
                     },
                     "404": {
                         "description": "Short URL not found",
                         "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
+                            "$ref": "#/definitions/models.ErrorResponse-error"
                         }
                     },
                     "500": {
                         "description": "Server error",
                         "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
+                            "$ref": "#/definitions/models.ErrorResponse-error"
                         }
                     }
                 }
@@ -273,19 +273,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request - missing code parameter",
                         "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
+                            "$ref": "#/definitions/models.ErrorResponse-error"
                         }
                     },
                     "404": {
                         "description": "Short URL not found",
                         "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
+                            "$ref": "#/definitions/models.ErrorResponse-error"
                         }
                     },
                     "500": {
                         "description": "Server error",
                         "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
+                            "$ref": "#/definitions/models.ErrorResponse-error"
                         }
                     }
                 }
@@ -309,21 +309,10 @@ const docTemplate = `{
                 }
             }
         },
-        "models.ErrorResponse": {
+        "models.ErrorResponse-error": {
             "type": "object",
             "properties": {
-                "details": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "error": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.ErrorType"
-                        }
-                    ],
-                    "example": "FAILED_CHECK"
-                },
+                "details": {},
                 "message": {
                     "type": "string",
                     "example": "This is a pretty message"
@@ -331,8 +320,20 @@ const docTemplate = `{
                 "request_id": {
                     "type": "string"
                 },
+                "statusCode": {
+                    "type": "integer",
+                    "example": 201
+                },
                 "timestamp": {
                     "type": "string"
+                },
+                "type": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.ErrorType"
+                        }
+                    ],
+                    "example": "FAILED_CHECK"
                 }
             }
         },
@@ -451,6 +452,9 @@ const docTemplate = `{
         "models.ShortenData": {
             "type": "object",
             "properties": {
+                "shortUrl": {
+                    "type": "string"
+                },
                 "shorten": {
                     "$ref": "#/definitions/models.Shorten"
                 }

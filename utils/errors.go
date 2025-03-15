@@ -64,17 +64,12 @@ func RespondWithError(c *gin.Context, statusCode int, err error, customMessage .
 	}
 
 	// Create response with error details
-	errorResponse := models.ErrorResponse{
-		Error:     errorType,
+	errorResponse := models.ErrorResponse[error]{
+		Type:      errorType,
 		Message:   message,
-		Details:   map[string]interface{}{},
+		Details:   err,
 		Timestamp: time.Now(),
 		RequestID: requestID,
-	}
-
-	// Add error details if error is provided
-	if err != nil {
-		errorResponse.Details["error"] = err.Error()
 	}
 
 	c.JSON(statusCode, errorResponse)

@@ -25,7 +25,7 @@ func NewHealthHandler(service services.HealthService) *HealthHandler {
 // @Tags health
 // @Produce json
 // @Success 200 {object} models.HealthResponse
-// @Failure 500 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse[error]
 // @Router /health [get]
 func (h *HealthHandler) CheckHealth(c *gin.Context) {
 	appStatus := h.service.CheckApplicationStatus()
@@ -41,11 +41,12 @@ func (h *HealthHandler) CheckHealth(c *gin.Context) {
 		httpStatus = http.StatusInternalServerError
 
 		// Create error response
-		errorResponse := models.ErrorResponse{
-			Error: "Health check failed",
-			Details: map[string]interface{}{
-				"application": appStatus,
-				"database":    dbStatus,
+		errorResponse := models.ErrorResponse[models.HealthResponse]{
+			Type: models.ErrorTypeFailedCheck,
+			Details: models.HealthResponse{
+				Status:      "down",
+				Application: appStatus,
+				Database:    dbStatus,
 			},
 		}
 

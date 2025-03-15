@@ -49,7 +49,7 @@ func NewShortenHandler(service services.ShortenService) *ShortenHandler {
 //	  "message": "URL shortened successfully"
 //	}
 //
-// @Failure 400 {object} models.ErrorResponse "Invalid request format or short code already exists"
+// @Failure 400 {object} models.ErrorResponse[error] "Invalid request format or short code already exists"
 // @Example response
 //
 //	{
@@ -62,7 +62,7 @@ func NewShortenHandler(service services.ShortenService) *ShortenHandler {
 //	  "requestId": "c7f3305d-8c9a-4b9b-b701-3b9a1e36c1f0"
 //	}
 //
-// @Failure 500 {object} models.ErrorResponse "Server error"
+// @Failure 500 {object} models.ErrorResponse[error] "Server error"
 // @Router /shorten [post]
 func (h *ShortenHandler) Create(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -129,8 +129,8 @@ func (h *ShortenHandler) Create(c *gin.Context) {
 //	  "message": "URL updated successfully"
 //	}
 //
-// @Failure 400 {object} models.ErrorResponse "Invalid request format"
-// @Failure 404 {object} models.ErrorResponse "Short URL not found"
+// @Failure 400 {object} models.ErrorResponse[error] "Invalid request format"
+// @Failure 404 {object} models.ErrorResponse[error] "Short URL not found"
 // @Example response
 //
 //	{
@@ -143,7 +143,7 @@ func (h *ShortenHandler) Create(c *gin.Context) {
 //	  "requestId": "c7f3305d-8c9a-4b9b-b701-3b9a1e36c1f0"
 //	}
 //
-// @Failure 500 {object} models.ErrorResponse "Server error"
+// @Failure 500 {object} models.ErrorResponse[error] "Server error"
 // @Router /shorten/{code} [put]
 func (h *ShortenHandler) Update(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -189,7 +189,7 @@ func (h *ShortenHandler) Update(c *gin.Context) {
 // @Tags shorten
 // @Param code path string true "Short code identifier" example:"abc123"
 // @Success 204 "No Content - URL successfully deleted"
-// @Failure 400 {object} models.ErrorResponse "Bad request - missing code parameter"
+// @Failure 400 {object} models.ErrorResponse[error] "Bad request - missing code parameter"
 // @Example response
 //
 //	{
@@ -200,8 +200,8 @@ func (h *ShortenHandler) Update(c *gin.Context) {
 //	  "requestId": "c7f3305d-8c9a-4b9b-b701-3b9a1e36c1f0"
 //	}
 //
-// @Failure 404 {object} models.ErrorResponse "Short URL not found"
-// @Failure 500 {object} models.ErrorResponse "Server error"
+// @Failure 404 {object} models.ErrorResponse[error] "Short URL not found"
+// @Failure 500 {object} models.ErrorResponse[error] "Server error"
 // @Router /shorten/{code} [delete]
 func (h *ShortenHandler) Delete(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -239,8 +239,8 @@ func (h *ShortenHandler) Delete(c *gin.Context) {
 // @Param code path string true "Short code identifier" example:"abc123"
 // @Success 302 "Found - Redirects to the original URL"
 // @Header 302 {string} Location "The URL to redirect to"
-// @Failure 400 {object} models.ErrorResponse "Bad request - missing code parameter"
-// @Failure 404 {object} models.ErrorResponse "Short URL not found or has expired"
+// @Failure 400 {object} models.ErrorResponse[error] "Bad request - missing code parameter"
+// @Failure 404 {object} models.ErrorResponse[error] "Short URL not found or has expired"
 // @Example response
 //
 //	{
@@ -309,8 +309,8 @@ func (h *ShortenHandler) Redirect(c *gin.Context) {
 //	}
 //
 // @Success 201 {object} models.APIResponse[models.ShortenData] "Successfully created new shortened URL"
-// @Failure 400 {object} models.ErrorResponse "Invalid request format"
-// @Failure 404 {object} models.ErrorResponse "Original URL not found and createIfNotExists is false"
+// @Failure 400 {object} models.ErrorResponse[error] "Invalid request format"
+// @Failure 404 {object} models.ErrorResponse[error] "Original URL not found and createIfNotExists is false"
 // @Example response
 //
 //	{
@@ -321,7 +321,7 @@ func (h *ShortenHandler) Redirect(c *gin.Context) {
 //	  "requestId": "c7f3305d-8c9a-4b9b-b701-3b9a1e36c1f0"
 //	}
 //
-// @Failure 500 {object} models.ErrorResponse "Server error"
+// @Failure 500 {object} models.ErrorResponse[error] "Server error"
 // @Router /shorten/lookup [post]
 func (h *ShortenHandler) GetByOriginalURL(c *gin.Context) {
 	ctx := c.Request.Context()
